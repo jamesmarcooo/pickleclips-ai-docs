@@ -605,7 +605,47 @@ clip_edits
 - Share links with OG preview cards
 - User feedback system (thumbs up/down on clips)
 
-### Phase 3 — Personalization + Auto-Recognition (Weeks 15–20)
+### Phase 3 — Output Controls: ZIP Download + Optional Reel Generation (Weeks 15–17)
+
+**Goal:** Give users full control over their output — download raw clips or opt into reel generation on demand
+
+#### 3.a — ZIP Clip Download
+
+Users can download all extracted clips as a single ZIP archive, organized into subfolders by shot type (e.g. `drive/`, `dink/`, `erne/`, `smash/`). No reel generation required — the raw clips are immediately useful for manual editing, social posting, or archiving.
+
+- `GET /api/v1/videos/{video_id}/clips/download-zip` — streams a ZIP with category subfolders
+- Available as soon as the video reaches `analyzed` status
+- Authenticated, per-user download only
+- Frontend: "Download ZIP" button on the video detail page
+
+#### 3.b — On-Demand Reel Generation
+
+Reel generation (previously auto-triggered at the end of Phase 2 pipeline) is now fully optional and user-initiated. After analysis completes, users choose whether to generate reels.
+
+- `POST /api/v1/videos/{video_id}/generate-reels` — triggers the standard auto-generated reel set
+- Idempotent: skips reel types already queued or generated for the video
+- Users can also request individual reel types via `POST /api/v1/reels` (unchanged)
+- Frontend: "Generate Reels" button on the video detail page, separate from ZIP download
+
+#### Output Decision Flow (Updated)
+
+```
+Analysis complete (video status → 'analyzed')
+    │
+    ├── Option A: Download ZIP of raw clips
+    │   └── GET /videos/{id}/clips/download-zip
+    │       → clips/<shot_type>/<clip_id>.mp4 in ZIP archive
+    │
+    └── Option B: Generate Reels (on-demand)
+        └── POST /videos/{id}/generate-reels
+            → queues: highlight_montage, my_best_plays,
+                      game_recap, points_of_improvement
+            → user can also request individual types via POST /reels
+```
+
+Both options are independent — users can download the ZIP, generate reels, or do both.
+
+### Phase 4 — Personalization + Auto-Recognition (Weeks 18–24)
 
 **Goal:** AI learns your highlight preferences and recognizes you automatically
 
@@ -618,7 +658,7 @@ clip_edits
 - Smart vertical cropping (center on the user using tracked position)
 - Reel templates (e.g., "Best of the Month", "Tournament Recap")
 
-### Phase 4 — Mobile + Social (Weeks 21–28)
+### Phase 5 — Mobile + Social (Weeks 25–32)
 
 **Goal:** Full mobile app + direct social posting
 
@@ -628,7 +668,7 @@ clip_edits
 - Public profile pages with highlight reels
 - Push notifications when reels are ready
 
-### Phase 5 — Advanced (Weeks 29+)
+### Phase 6 — Advanced (Weeks 33+)
 
 **Goal:** Community and advanced AI features
 
